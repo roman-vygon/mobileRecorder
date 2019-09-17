@@ -17,6 +17,12 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.IOException
+import android.R.string.cancel
+import android.content.DialogInterface
+import android.text.InputType
+import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
+
 
 class MainActivity : AppCompatActivity() {
     val animals: ArrayList<String> = ArrayList()
@@ -55,9 +61,27 @@ class MainActivity : AppCompatActivity() {
                 RequestPermissions()
             }
         })
+
         pauseButton.setOnClickListener(View.OnClickListener {
             pauseButton.setEnabled(false)
             recordButton.setEnabled(true)
+            var m_Text = ""
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Save as")
+
+// Set up the input
+            val input = EditText(this)
+// Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+            input.inputType = InputType.TYPE_CLASS_TEXT
+            builder.setView(input)
+
+// Set up the buttons
+            builder.setPositiveButton("Save",
+                DialogInterface.OnClickListener { dialog, which -> m_Text = input.text.toString() })
+            builder.setNegativeButton("Cancel",
+                DialogInterface.OnClickListener { dialog, which -> dialog.cancel() })
+
+            builder.show()
 
             mRecorder?.stop()
             mRecorder?.release()
