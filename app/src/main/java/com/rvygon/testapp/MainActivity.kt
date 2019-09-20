@@ -19,75 +19,145 @@ import kotlinx.android.synthetic.main.activity_main.*
 import java.io.IOException
 import android.R.string.cancel
 import android.content.DialogInterface
+import android.os.SystemClock
 import android.text.InputType
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
+import java.io.File
+import android.widget.Chronometer
+
+
 
 
 class MainActivity : AppCompatActivity() {
-    val animals: ArrayList<String> = ArrayList()
+
+    private var mChronometer: Chronometer? = null
+
+    var recordingArrayList: ArrayList<Recording> = ArrayList()
     val REQUEST_AUDIO_PERMISSION_CODE = 1
     private var mRecorder: MediaRecorder? = null
+    private var mPlayer: MediaPlayer? = null
     private val LOG_TAG = "AudioRecording"
+    private val audioAdapter: AudioAdapter? = null
     private var mFileName: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        addAnimals()
-        audiofiles.layoutManager = LinearLayoutManager(this)
-        audiofiles.adapter = AudioAdapter(animals, this)
-        mFileName = Environment.getExternalStorageDirectory().getAbsolutePath();
-        mFileName += "/AudioRecording.3gp";
+
+        fetchRecordings()
+        initViews()
+
         recordButton.setOnClickListener(View.OnClickListener {
-            if (CheckPermissions()) {
-
-                pauseButton.setEnabled(true)
-                recordButton.setEnabled(false)
-                animateLowerPanel()
-                mRecorder = MediaRecorder()
-                mRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
-                mRecorder?.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-                mRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-                mRecorder?.setOutputFile(mFileName)
-                try {
-                    mRecorder?.prepare()
-                } catch (e: IOException) {
-                    Log.e(LOG_TAG, "prepare() failed")
-                }
-
-                mRecorder?.start()
-                Toast.makeText(applicationContext, "Recording Started", Toast.LENGTH_LONG).show()
-            } else {
-                RequestPermissions()
-            }
+            prepareRecording()
         })
 
         pauseButton.setOnClickListener(View.OnClickListener {
-            pauseButton.setEnabled(false)
-            recordButton.setEnabled(true)
-            var m_Text = ""
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("Save as")
-
-// Set up the input
-            val input = EditText(this)
-// Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-            input.inputType = InputType.TYPE_CLASS_TEXT
-            builder.setView(input)
-
-// Set up the buttons
-            builder.setPositiveButton("Save",
-                DialogInterface.OnClickListener { dialog, which -> m_Text = input.text.toString() })
-            builder.setNegativeButton("Cancel",
-                DialogInterface.OnClickListener { dialog, which -> dialog.cancel() })
-
-            builder.show()
-
-            mRecorder?.stop()
-            mRecorder?.release()
-            mRecorder = null
-            Toast.makeText(applicationContext, "Recording Stopped", Toast.LENGTH_LONG).show()
+            stopRecording()
         })
+    }
+    private fun fetchRecordings() {
+
+        val root = android.os.Environment.getExternalStorageDirectory()
+        val path = root.absolutePath + "/Phoebus/Audios"
+        Log.d("Files", "Path: $path")
+        val directory = File(path)
+        val files = directory.listFiles()
+        Log.d("Files", "Size: " + files!!.size)
+        if (files != null) {
+
+            for (i in files.indices) {
+
+                Log.d("Files", "FileName:" + files[i].name)
+                val fileName = files[i].name
+                val recordingUri =
+                    root.absolutePath + "/VoiceRecorderSimplifiedCoding/Audios/" + fileName
+
+                val recording = Recording(recordingUri, fileName, false)
+                recordingArrayList.add(recording)
+            }
+            audiofiles.setVisibility(View.VISIBLE)
+            //setAdaptertoRecyclerView()
+
+        } else {
+            audiofiles.setVisibility(View.GONE)
+        }
+
+    }
+
+     private fun initViews() {
+        audiofiles.setLayoutManager(LinearLayoutManager(this,LinearLayoutManager.VERTICAL, false));
+        audiofiles.setHasFixedSize(true)
+        audiofiles.adapter = AudioAdapter(recordingArrayList, this)
+    }
+    fun stopRecording() {
+        pauseButton.setEnabled(false)
+        recordButton.setEnabled(true)
+        var m_Text = ""
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Save as")
+        mChronometer?.stop();
+        // Set up the input
+        val input = EditText(this)
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.inputType = InputType.TYPE_CLASS_TEXT
+        builder.setView(input)
+
+        // Set up the buttons
+        builder.setPositiveButton("Save",
+            DialogInterface.OnClickListener { dialog, which -> m_Text = input.text.toString() })
+        builder.setNegativeButton("Cancel",
+            DialogInterface.OnClickListener { dialog, which -> dialog.cancel() })
+
+        builder.show()
+
+        mRecorder?.stop()
+        mRecorder?.release()
+        mRecorder = null
+        Toast.makeText(applicationContext, "Recording Stopped", Toast.LENGTH_LONG).show()
+
+    }
+    fun prepareRecording()
+    {
+        mChronometer = recordTime
+        mChronometer?.setBase(SystemClock.elapsedRealtime())
+        if (CheckPermissions()) {
+            mFileName = Environment.getExternalStorageDirectory().getAbsolutePath();
+            val root = android.os.Environment.getExternalStorageDirectory()
+            val file = File(root.absolutePath + "/Phoebus/Audios")
+            if (!file.exists()) {
+                file.mkdirs()
+            }
+            mFileName = root.absolutePath + "/Phoebus/Audios/" +
+                    (System.currentTimeMillis().toString() + ".mp3")
+            Log.d("filename", mFileName)
+            startRecording()
+        }
+        else
+        {
+            RequestPermissions()
+        }
+    }
+    fun startRecording() {
+        animateLowerPanel()
+        pauseButton.setEnabled(true)
+        recordButton.setEnabled(false)
+
+        mChronometer?.start();
+
+        mRecorder = MediaRecorder()
+        mRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
+        mRecorder?.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+        mRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+        mRecorder?.setOutputFile(mFileName)
+        try {
+            mRecorder?.prepare()
+        } catch (e: IOException) {
+            Log.e(LOG_TAG, "prepare() failed")
+        }
+
+        mRecorder?.start()
+        Toast.makeText(applicationContext, "Recording Started", Toast.LENGTH_LONG).show()
 
     }
     fun animateLowerPanel() {
@@ -138,37 +208,9 @@ class MainActivity : AppCompatActivity() {
         )
     }
     fun addAnimals() {
-        animals.add("dog")
-        animals.add("cat")
-        animals.add("owl")
-        animals.add("cheetah")
-        animals.add("raccoon")
-        animals.add("bird")
-        animals.add("snake")
-        animals.add("lizard")
-        animals.add("hamster")
-        animals.add("bear")
-        animals.add("lion")
-        animals.add("tiger")
-        animals.add("horse")
-        animals.add("frog")
-        animals.add("fish")
-        animals.add("shark")
-        animals.add("turtle")
-        animals.add("elephant")
-        animals.add("cow")
-        animals.add("beaver")
-        animals.add("bison")
-        animals.add("porcupine")
-        animals.add("rat")
-        animals.add("mouse")
-        animals.add("goose")
-        animals.add("deer")
-        animals.add("fox")
-        animals.add("moose")
-        animals.add("buffalo")
-        animals.add("monkey")
-        animals.add("penguin")
-        animals.add("parrot")
+        //animals.add(Recording("","dog", false))
+      //  animals.add(Recording("","cat", false))
+        //animals.add(Recording("","owl", false))
+       // animals.add(Recording("","beaver", false))
     }
 }

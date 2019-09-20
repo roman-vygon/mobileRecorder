@@ -1,5 +1,6 @@
 package com.rvygon.testapp
 import android.content.Context
+import android.os.Handler
 
 import android.view.LayoutInflater
 import android.view.View
@@ -10,11 +11,14 @@ import kotlinx.android.synthetic.main.audio_row.view.*
 
 
 
-class AudioAdapter(val items : ArrayList<String>, val context: Context) : RecyclerView.Adapter<ViewHolder>() {
+
+
+
+class AudioAdapter(val recordingArrayList : ArrayList<Recording>, val context: Context) : RecyclerView.Adapter<ViewHolder>() {
 
     // Gets the number of animals in the list
     override fun getItemCount(): Int {
-        return items.size
+        return recordingArrayList.size
     }
     private val mOnClickListener = getItemCount()
 
@@ -28,11 +32,20 @@ class AudioAdapter(val items : ArrayList<String>, val context: Context) : Recycl
 
     // Binds each animal in the ArrayList to a view
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.tvAnimalType?.text = items.get(position)
+        holder.fileName?.text = recordingArrayList.get(position).fileName
     }
 }
 
 class ViewHolder (view: View) : RecyclerView.ViewHolder(view) {
     // Holds the TextView that will add each animal to
-    val tvAnimalType = view.audio_item_name
+    val fileName = view.audio_item_name
+    val viewPlay = view.playBtn
+    var seekBar = view.seekBar
+    private val recordingUri: String? = null
+    private val lastProgress = 0
+    private val mHandler = Handler()
+    var holder: ViewHolder? = null
+
+
 }
+
