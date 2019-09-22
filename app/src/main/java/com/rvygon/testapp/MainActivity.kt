@@ -17,12 +17,14 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.IOException
-import android.R.string.cancel
+
+
 import android.content.DialogInterface
 import android.os.SystemClock
 import android.text.InputType
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
+
 import java.io.File
 import android.widget.Chronometer
 
@@ -63,15 +65,15 @@ class MainActivity : AppCompatActivity() {
         Log.d("Files", "Path: $path")
         val directory = File(path)
         val files = directory.listFiles()
-        Log.d("Files", "Size: " + files!!.size)
-        if (files != null) {
 
+        if (files != null) {
+            Log.d("Files", "Size: " + files!!.size)
             for (i in files.indices) {
 
                 Log.d("Files", "FileName:" + files[i].name)
                 val fileName = files[i].name
                 val recordingUri =
-                    root.absolutePath + "/VoiceRecorderSimplifiedCoding/Audios/" + fileName
+                    root.absolutePath + "/Phoebus/Audios/" + fileName
 
                 val recording = Recording(recordingUri, fileName, false)
                 recordingArrayList.add(recording)
@@ -88,7 +90,7 @@ class MainActivity : AppCompatActivity() {
      private fun initViews() {
         audiofiles.setLayoutManager(LinearLayoutManager(this,LinearLayoutManager.VERTICAL, false));
         audiofiles.setHasFixedSize(true)
-        audiofiles.adapter = AudioAdapter(recordingArrayList, this)
+        audiofiles.adapter = AudioAdapter(this, recordingArrayList)
     }
     fun stopRecording() {
         pauseButton.setEnabled(false)
@@ -96,12 +98,19 @@ class MainActivity : AppCompatActivity() {
         var m_Text = ""
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Save as")
-        mChronometer?.stop();
+        mChronometer?.stop()
+        mChronometer?.setBase(SystemClock.elapsedRealtime())
         // Set up the input
         val input = EditText(this)
         // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
         input.inputType = InputType.TYPE_CLASS_TEXT
+
+        mRecorder?.stop()
+        mRecorder?.release()
+        mRecorder = null
+
         builder.setView(input)
+
 
         // Set up the buttons
         builder.setPositiveButton("Save",
@@ -111,9 +120,7 @@ class MainActivity : AppCompatActivity() {
 
         builder.show()
 
-        mRecorder?.stop()
-        mRecorder?.release()
-        mRecorder = null
+
         Toast.makeText(applicationContext, "Recording Stopped", Toast.LENGTH_LONG).show()
 
     }
@@ -207,10 +214,5 @@ class MainActivity : AppCompatActivity() {
             REQUEST_AUDIO_PERMISSION_CODE
         )
     }
-    fun addAnimals() {
-        //animals.add(Recording("","dog", false))
-      //  animals.add(Recording("","cat", false))
-        //animals.add(Recording("","owl", false))
-       // animals.add(Recording("","beaver", false))
-    }
+
 }

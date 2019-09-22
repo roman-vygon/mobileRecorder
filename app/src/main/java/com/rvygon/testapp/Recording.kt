@@ -1,4 +1,5 @@
 package com.rvygon.testapp
+
 class Recording(uri: String, fileName: String, isPlaying: Boolean) {
 
     var uri: String
@@ -13,4 +14,5 @@ class Recording(uri: String, fileName: String, isPlaying: Boolean) {
         this.fileName = fileName
         this.isPlaying = isPlaying
     }
+
 }
