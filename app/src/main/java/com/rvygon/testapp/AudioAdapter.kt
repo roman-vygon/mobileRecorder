@@ -1,4 +1,5 @@
 package com.rvygon.testapp
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 
@@ -9,30 +10,26 @@ import androidx.recyclerview.widget.RecyclerView
 
 import android.transition.TransitionManager
 import android.media.MediaPlayer
-import android.os.SystemClock
-import android.util.Log
-import android.widget.Chronometer
-import android.widget.ImageView
-import android.widget.SeekBar
 
-import android.widget.TextView
+import android.util.Log
+import android.widget.*
+
+
+import java.io.File
 import java.io.IOException
-import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
+
 
 
 class AudioAdapter(
     private val context: Context,
-    private val recordingArrayList1: ArrayList<Recording>
+    private val recordingArrayList: MutableList<Recording>
 ) : RecyclerView.Adapter<AudioAdapter.ViewHolder>() {
     private var mPlayer: MediaPlayer? = null
-    var recordingArrayList = recordingArrayList1
     private var isPlaying = false
-    private var last_index = -1
+    private var lastIndex = -1
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view =
             LayoutInflater.from(context).inflate(R.layout.audio_row, parent, false)
 
@@ -40,7 +37,7 @@ class AudioAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-
+        holder.resetHandler()
         setUpData(holder, position)
     }
 
@@ -48,22 +45,24 @@ class AudioAdapter(
         return recordingArrayList.size
     }
 
-
     private fun setUpData(holder: ViewHolder, position: Int) {
 
         val recording = recordingArrayList[position]
-        holder.textViewName.text = recording.fileName
+        holder.textViewName.text = recording.fileName.substringBeforeLast('.',recording.fileName)
 
 
         if (recording.isPlaying) {
-            //holder.imageViewPlay.setImageResource(R.drawable.ic_pause)
+            holder.imageViewPlay.setImageResource(R.drawable.ic_pause)
             TransitionManager.beginDelayedTransition(holder.itemView as ViewGroup)
             holder.seekBar.visibility = View.VISIBLE
             holder.seekUpdation(holder)
         } else {
-            //holder.imageViewPlay.setImageResource(R.drawable.ic_play)
+            holder.imageViewPlay.setImageResource(R.drawable.ic_play)
             TransitionManager.beginDelayedTransition(holder.itemView as ViewGroup)
             holder.seekBar.visibility = View.GONE
+            holder.allTime.text = ""
+            holder.playTime.text = ""
+            holder.curTime = 0
         }
 
 
@@ -73,27 +72,21 @@ class AudioAdapter(
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        internal var imageViewPlay: ImageView
-        internal var seekBar: SeekBar
-        internal var textViewName: TextView
-        internal var allTime: TextView
-        internal var playTime: TextView
+        internal var imageViewPlay: ImageView = itemView.findViewById(R.id.playBtn)
+        internal var seekBar: SeekBar = itemView.findViewById(R.id.seekBar)
+        internal var textViewName: TextView = itemView.findViewById(R.id.audio_item_name)
+        internal var allTime: TextView = itemView.findViewById(R.id.timeAll)
+        internal var playTime: TextView = itemView.findViewById(R.id.playTime)
         internal var curTime: Long = 0
         private var recordingUri: String? = null
         private var lastProgress = 0
         private val mHandler = Handler()
-        internal var holder: ViewHolder? = null
+        private var holder: ViewHolder? = null
 
-        internal var runnable: Runnable = Runnable { seekUpdation(holder) }
+        private var runnable: Runnable = Runnable { seekUpdation(holder) }
 
         init {
-
-            imageViewPlay = itemView.findViewById(R.id.playBtn)
-            seekBar = itemView.findViewById(R.id.seekBar)
-            playTime = itemView.findViewById(R.id.playTime)
-            allTime = itemView.findViewById(R.id.timeAll)
-            textViewName = itemView.findViewById(R.id.audio_item_name)
-            imageViewPlay.setOnClickListener(View.OnClickListener {
+            imageViewPlay.setOnClickListener {
                 val position = adapterPosition
                 val recording = recordingArrayList[position]
 
@@ -101,16 +94,15 @@ class AudioAdapter(
 
                 if (isPlaying) {
                     stopPlaying()
-                    if (true) {
+                    if (position == lastIndex) {
                         recording.isPlaying = false
-                        stopPlaying()
                         notifyItemChanged(position)
                     } else {
                         markAllPaused()
                         recording.isPlaying = true
                         notifyItemChanged(position)
                         startPlaying(recording, position)
-                        last_index = position
+                        lastIndex = position
                     }
 
                 } else {
@@ -119,11 +111,14 @@ class AudioAdapter(
                     seekBar.max = mPlayer!!.duration
                     Log.d("isPlayin", "False")
                     notifyItemChanged(position)
-                    last_index = position
+                    lastIndex = position
                 }
-            })
+            }
         }
-
+        fun resetHandler()
+        {
+            mHandler.removeCallbacksAndMessages(null)
+        }
         fun manageSeekBar(holder: ViewHolder) {
             holder.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
@@ -131,7 +126,6 @@ class AudioAdapter(
                         mPlayer!!.seekTo(progress)
                     }
                 }
-
                 override fun onStartTrackingTouch(seekBar: SeekBar) {
 
                 }
@@ -145,11 +139,11 @@ class AudioAdapter(
         private fun markAllPaused() {
             for (i in 0 until recordingArrayList.size) {
                 recordingArrayList[i].isPlaying = false
-                recordingArrayList[i] = recordingArrayList[i]
             }
             notifyDataSetChanged()
         }
 
+        @SuppressLint("SetTextI18n")
         fun seekUpdation(holder: ViewHolder?) {
             this.holder = holder
             if (mPlayer != null) {
@@ -166,17 +160,16 @@ class AudioAdapter(
                         TimeUnit.MILLISECONDS.toMinutes(mPlayer!!.duration.toLong()), // The change is in this line
                         TimeUnit.MILLISECONDS.toSeconds(mPlayer!!.duration.toLong()) -
                                 TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(mPlayer!!.duration.toLong()))
-                    );
+                    )
                     holder?.playTime?.text = String.format(
                         "%02d:%02d",
                         TimeUnit.MILLISECONDS.toMinutes(curTime), // The change is in this line
                         TimeUnit.MILLISECONDS.toSeconds(curTime) -
                                 TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(curTime))
-                    );
+                    )
                 }
             }
             mHandler.postDelayed(runnable, 100)
-
         }
 
         private fun stopPlaying() {
@@ -200,7 +193,9 @@ class AudioAdapter(
             isPlaying = false
         }
 
-        private fun startPlaying(audio: Recording, position: Int) {
+        private fun startPlaying(audio: Recording, position: Int) {            
+
+            Log.e("LOG_TAG", audio.fileName)
             curTime = 0
             mPlayer = MediaPlayer()
 
@@ -217,15 +212,13 @@ class AudioAdapter(
             seekBar.max = mPlayer!!.duration
             isPlaying = true
 
-
             mPlayer!!.setOnCompletionListener {
                 curTime = 0
-
                 audio.isPlaying = false
-                stopPlaying()
-
-                notifyItemChanged(position)
+                notifyDataSetChanged()
             }
         }
     }
+
+
 }
