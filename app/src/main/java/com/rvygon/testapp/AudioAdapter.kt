@@ -17,13 +17,17 @@ import android.widget.SeekBar
 
 import android.widget.TextView
 import java.io.IOException
+import java.util.*
+import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 
 class AudioAdapter(
     private val context: Context,
-    private val recordingArrayList: ArrayList<Recording>
+    private val recordingArrayList1: ArrayList<Recording>
 ) : RecyclerView.Adapter<AudioAdapter.ViewHolder>() {
     private var mPlayer: MediaPlayer? = null
+    var recordingArrayList = recordingArrayList1
     private var isPlaying = false
     private var last_index = -1
 
@@ -50,6 +54,7 @@ class AudioAdapter(
         val recording = recordingArrayList[position]
         holder.textViewName.text = recording.fileName
 
+
         if (recording.isPlaying) {
             //holder.imageViewPlay.setImageResource(R.drawable.ic_pause)
             TransitionManager.beginDelayedTransition(holder.itemView as ViewGroup)
@@ -71,7 +76,9 @@ class AudioAdapter(
         internal var imageViewPlay: ImageView
         internal var seekBar: SeekBar
         internal var textViewName: TextView
-        internal var curTime: Chronometer? = null
+        internal var allTime: TextView
+        internal var playTime: TextView
+        internal var curTime: Long = 0
         private var recordingUri: String? = null
         private var lastProgress = 0
         private val mHandler = Handler()
@@ -83,8 +90,9 @@ class AudioAdapter(
 
             imageViewPlay = itemView.findViewById(R.id.playBtn)
             seekBar = itemView.findViewById(R.id.seekBar)
+            playTime = itemView.findViewById(R.id.playTime)
+            allTime = itemView.findViewById(R.id.timeAll)
             textViewName = itemView.findViewById(R.id.audio_item_name)
-            curTime = itemView.findViewById(R.id.playTime)
             imageViewPlay.setOnClickListener(View.OnClickListener {
                 val position = adapterPosition
                 val recording = recordingArrayList[position]
@@ -93,7 +101,7 @@ class AudioAdapter(
 
                 if (isPlaying) {
                     stopPlaying()
-                    if (position == last_index) {
+                    if (true) {
                         recording.isPlaying = false
                         stopPlaying()
                         notifyItemChanged(position)
@@ -108,8 +116,6 @@ class AudioAdapter(
                 } else {
                     startPlaying(recording, position)
                     recording.isPlaying = true
-                    curTime?.start()
-                    curTime?.setBase(SystemClock.elapsedRealtime())
                     seekBar.max = mPlayer!!.duration
                     Log.d("isPlayin", "False")
                     notifyItemChanged(position)
@@ -150,9 +156,27 @@ class AudioAdapter(
                 val mCurrentPosition = mPlayer!!.currentPosition
                 holder?.seekBar?.max = mPlayer!!.duration
                 holder?.seekBar?.progress = mCurrentPosition
+
                 lastProgress = mCurrentPosition
+
+                if (mPlayer!!.isPlaying) {
+                    curTime += 100
+                    holder?.allTime?.text = "/ " + String.format(
+                        "%02d:%02d",
+                        TimeUnit.MILLISECONDS.toMinutes(mPlayer!!.duration.toLong()), // The change is in this line
+                        TimeUnit.MILLISECONDS.toSeconds(mPlayer!!.duration.toLong()) -
+                                TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(mPlayer!!.duration.toLong()))
+                    );
+                    holder?.playTime?.text = String.format(
+                        "%02d:%02d",
+                        TimeUnit.MILLISECONDS.toMinutes(curTime), // The change is in this line
+                        TimeUnit.MILLISECONDS.toSeconds(curTime) -
+                                TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(curTime))
+                    );
+                }
             }
             mHandler.postDelayed(runnable, 100)
+
         }
 
         private fun stopPlaying() {
@@ -161,13 +185,25 @@ class AudioAdapter(
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+            curTime = 0
+            try {
+                mHandler.removeCallbacksAndMessages(null)
+            }
+            catch (e: Exception) {
+                e.printStackTrace()
+            }
 
+            holder?.playTime?.text = ""
+
+            holder?.allTime?.text = ""
             mPlayer = null
             isPlaying = false
         }
 
         private fun startPlaying(audio: Recording, position: Int) {
+            curTime = 0
             mPlayer = MediaPlayer()
+
             try {
                 mPlayer!!.setDataSource(recordingUri)
                 mPlayer!!.prepare()
@@ -181,11 +217,15 @@ class AudioAdapter(
             seekBar.max = mPlayer!!.duration
             isPlaying = true
 
+
             mPlayer!!.setOnCompletionListener {
+                curTime = 0
+
                 audio.isPlaying = false
+                stopPlaying()
+
                 notifyItemChanged(position)
             }
         }
-
     }
 }

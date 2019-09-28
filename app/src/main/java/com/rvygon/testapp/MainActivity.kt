@@ -22,13 +22,13 @@ import java.io.IOException
 import android.content.DialogInterface
 import android.os.SystemClock
 import android.text.InputType
+import android.view.Menu
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 
 import java.io.File
 import android.widget.Chronometer
-
-
+import android.widget.SearchView
 
 
 class MainActivity : AppCompatActivity() {
@@ -43,12 +43,48 @@ class MainActivity : AppCompatActivity() {
     private val audioAdapter: AudioAdapter? = null
     private var mFileName: String? = null
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         fetchRecordings()
         initViews()
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+
+            override fun onQueryTextChange(newText: String): Boolean {
+
+                if (newText.isEmpty()) {
+                    audioAdapter?.recordingArrayList?.addAll(recordingArrayList)
+                }
+                else
+                {
+                    val text = newText.toLowerCase()
+                    var tempArrayList : ArrayList<Recording>? = ArrayList<Recording>(0)
+                    recordingArrayList.filterTo(tempArrayList!!) {
+                        if (it.fileName.isEmpty())
+                        {
+                            false
+                        }
+                        else
+                        {
+                            it.fileName.contains(text)
+                        }
+                    }
+                    audioAdapter?.recordingArrayList = tempArrayList
+                }
+
+                audioAdapter?.notifyDataSetChanged()
+                return false
+            }
+
+            override fun onQueryTextSubmit(query: String): Boolean {
+                // task HERE
+                return false
+            }
+
+        })
 
         recordButton.setOnClickListener(View.OnClickListener {
             prepareRecording()
@@ -58,6 +94,8 @@ class MainActivity : AppCompatActivity() {
             stopRecording()
         })
     }
+
+
     private fun fetchRecordings() {
 
         val root = android.os.Environment.getExternalStorageDirectory()
@@ -92,7 +130,23 @@ class MainActivity : AppCompatActivity() {
         audiofiles.setHasFixedSize(true)
         audiofiles.adapter = AudioAdapter(this, recordingArrayList)
     }
+    fun renameFile (from: String, to: String)
+    {
+        if (to.isEmpty())
+        {
+            deleteFile(from)
+        }
+        else
+        {
+            val root = android.os.Environment.getExternalStorageDirectory()
+            val fFrom = File(mFileName)
+            val fTo = File(root.absolutePath + "/Phoebus/Audios/" + to +".mp3")
+            if (fFrom.exists())
+                fFrom.renameTo(fTo)
+        }
+    }
     fun stopRecording() {
+        animateLowerPanel(false)
         pauseButton.setEnabled(false)
         recordButton.setEnabled(true)
         var m_Text = ""
@@ -114,13 +168,14 @@ class MainActivity : AppCompatActivity() {
 
         // Set up the buttons
         builder.setPositiveButton("Save",
-            DialogInterface.OnClickListener { dialog, which -> m_Text = input.text.toString() })
+            DialogInterface.OnClickListener {
+                    dialog, which -> m_Text = input.text.toString()
+                    renameFile(mFileName!!, m_Text)
+                                                })
         builder.setNegativeButton("Cancel",
             DialogInterface.OnClickListener { dialog, which -> dialog.cancel() })
 
         builder.show()
-
-
         Toast.makeText(applicationContext, "Recording Stopped", Toast.LENGTH_LONG).show()
 
     }
@@ -146,7 +201,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
     fun startRecording() {
-        animateLowerPanel()
+        animateLowerPanel(true)
         pauseButton.setEnabled(true)
         recordButton.setEnabled(false)
 
@@ -167,15 +222,31 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(applicationContext, "Recording Started", Toast.LENGTH_LONG).show()
 
     }
-    fun animateLowerPanel() {
-        recordButton.visibility = View.INVISIBLE
-        val bottomUp = AnimationUtils.loadAnimation(
-            applicationContext,
-            R.anim.bottom_anim
-        )
-        val hiddenPanel = findViewById(R.id.pausePanel) as ViewGroup
-        hiddenPanel.startAnimation(bottomUp)
-        hiddenPanel.visibility = View.VISIBLE
+    fun animateLowerPanel(up:Boolean) {
+
+        if (up) {
+            recordButton.visibility = View.INVISIBLE
+            lowerPanel.visibility = View.INVISIBLE
+            val bottomUp = AnimationUtils.loadAnimation(
+                applicationContext,
+                R.anim.bottom_anim
+            )
+            val hiddenPanel = findViewById(R.id.pausePanel) as ViewGroup
+            hiddenPanel.startAnimation(bottomUp)
+            hiddenPanel.visibility = View.VISIBLE
+        }
+        else
+        {
+            recordButton.visibility = View.VISIBLE
+            lowerPanel.visibility = View.VISIBLE
+            val bottomUp = AnimationUtils.loadAnimation(
+                applicationContext,
+                R.anim.up_anim
+            )
+            val hiddenPanel = findViewById(R.id.pausePanel) as ViewGroup
+            hiddenPanel.startAnimation(bottomUp)
+            hiddenPanel.visibility = View.INVISIBLE
+        }
     }
 
     override fun onRequestPermissionsResult(
