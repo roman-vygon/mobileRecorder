@@ -59,6 +59,10 @@ class Manager {
             }
         adapter.notifyDataSetChanged()
     }
+    fun checkEmpty() : Boolean
+    {
+        return (adapter.itemCount != 0)
+    }
     fun addItem(uri: String, fileName: String) {
         recordingArrayList.add(Recording(uri,fileName,false))
         filterRecordings()

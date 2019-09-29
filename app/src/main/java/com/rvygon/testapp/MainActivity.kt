@@ -127,6 +127,12 @@ class MainActivity : AppCompatActivity() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 //recordingArrayList.removeAt(viewHolder.adapterPosition)
                 val fileName = managerObj.removeItem(viewHolder)
+                if (!managerObj.checkEmpty())
+                {
+                    emptyText.visibility = View.VISIBLE
+                    audiofiles.visibility = View.INVISIBLE
+                }
+
                 Toast.makeText(applicationContext,"$fileName deleted", Toast.LENGTH_LONG).show()
             }
 
@@ -230,6 +236,11 @@ class MainActivity : AppCompatActivity() {
             if (wantToCloseDialog) {
                 dialog.dismiss()
                 managerObj.addItem(fullName, mText)
+                if (managerObj.checkEmpty())
+                {
+                    emptyText.visibility = View.INVISIBLE
+                    audiofiles.visibility = View.VISIBLE
+                }
                 recordingArrayList.add(Recording(fullName, mText, false))
 
 
