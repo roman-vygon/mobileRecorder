@@ -26,6 +26,7 @@ import android.graphics.drawable.Drawable
 import android.os.SystemClock
 import android.provider.MediaStore
 import android.text.InputType
+import android.view.Menu
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 
@@ -168,6 +169,23 @@ class MainActivity : AppCompatActivity() {
         itemTouchHelper.attachToRecyclerView(audiofiles)
     }
 
+    private fun renameFileTxt (from: String, to: String) : String
+    {
+        if (to.isEmpty())
+        {
+            File(from).delete()
+        }
+        else
+        {
+            val root = Environment.getExternalStorageDirectory()
+            val fFrom = File(from)
+            val fTo = File(root.absolutePath + "/Phoebus/Audios/" + to +".txt")
+            if (fFrom.exists())
+                fFrom.renameTo(fTo)
+            return root.absolutePath + "/Phoebus/Audios/" + to +".txt"
+        }
+        return ""
+    }
     private fun renameFile (from: String, to: String) : String
     {
         if (to.isEmpty())
@@ -210,12 +228,13 @@ class MainActivity : AppCompatActivity() {
                     .show()
             } else {
                 renameFile(recordingObj.mFileName, mText)
+                renameFileTxt(recordingObj.mDateFileName, mText)
                 dialog.dismiss()
             }
         }
         builder.setNegativeButton("Cancel") { dialog, _ ->
             dialog.cancel()
-            renameFile(recordingObj.mFileName, mText)
+            renameFileTxt(recordingObj.mDateFileName, mText)
         }
 
         val dialog = builder.create()
@@ -230,22 +249,25 @@ class MainActivity : AppCompatActivity() {
                     .show()
             } else {
                 fullName = renameFile(recordingObj.mFileName, mText)
+                renameFileTxt(recordingObj.mDateFileName, mText)
                 dialog.dismiss()
                 wantToCloseDialog = true
             }
             if (wantToCloseDialog) {
                 dialog.dismiss()
-                managerObj.addItem(fullName, mText)
+                managerObj.addItem(fullName, mText, recordingObj.curDateAndTime)
                 if (managerObj.checkEmpty())
                 {
                     emptyText.visibility = View.INVISIBLE
                     audiofiles.visibility = View.VISIBLE
                 }
-                recordingArrayList.add(Recording(fullName, mText, false))
-
-
+                recordingArrayList.add(Recording(fullName, mText, false, recordingObj.curDateAndTime))
             }
         }
+    }
+    private fun settingsClick() {
+
+        mainViewLayout
     }
      private fun initViews() {
          audiofiles.layoutManager = LinearLayoutManager(this,LinearLayoutManager.VERTICAL, false)
@@ -253,7 +275,11 @@ class MainActivity : AppCompatActivity() {
          audiofiles.adapter = AudioAdapter(this, managerObj.filteredArrayList)
          managerObj.adapter = audiofiles.adapter as AudioAdapter
     }
-
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.bottom_bar_buttons, menu)
+        return true
+    }
     private fun prepareRecording()
     {
         mChronometer = recordTime

@@ -49,7 +49,7 @@ class AudioAdapter(
 
         val recording = recordingArrayList[position]
         holder.textViewName.text = recording.fileName.substringBeforeLast('.',recording.fileName)
-
+        holder.dateText.text = recording.date
 
         if (recording.isPlaying) {
             holder.imageViewPlay.setImageResource(R.drawable.ic_pause)
@@ -77,6 +77,7 @@ class AudioAdapter(
         internal var textViewName: TextView = itemView.findViewById(R.id.audio_item_name)
         internal var allTime: TextView = itemView.findViewById(R.id.timeAll)
         internal var playTime: TextView = itemView.findViewById(R.id.playTime)
+        internal var dateText: TextView = itemView.findViewById(R.id.dateText)
         internal var curTime: Long = 0
         private var recordingUri: String? = null
         private var lastProgress = 0

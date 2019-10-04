@@ -6,12 +6,31 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
+import java.io.BufferedReader
+import java.io.FileReader
+import java.io.IOException
+
 
 class Manager {
     val recordingArrayList : MutableList<Recording> = arrayListOf()
     val filteredArrayList : MutableList<Recording> = arrayListOf()
     var filterQuery: String = ""
     lateinit var adapter: AudioAdapter
+    fun readFromFile(path:String) : String {
+
+        val file = File(path)
+        var text: String
+
+        try {
+            val br = BufferedReader(FileReader(file))
+            text = br.readLine()
+            br.close()
+        } catch (e: IOException) {
+            text = "ERROR ERROR"
+            print(e.stackTrace)
+        }
+        return text
+    }
     fun fetchRecordings() : Boolean {
 
         val root = Environment.getExternalStorageDirectory()
@@ -26,11 +45,15 @@ class Manager {
 
                 Log.d("Files", "FileName:" + files[i].name)
                 val fileName = files[i].name
-                val recordingUri =
-                    root.absolutePath + "/Phoebus/Audios/" + fileName
+                if (".mp3" in fileName) {
+                    val recordingUri =
+                        root.absolutePath + "/Phoebus/Audios/" + fileName
+                    val dateUri = root.absolutePath + "/Phoebus/Audios/" + fileName.substring(0,fileName.length-4)+".txt"
 
-                val recording = Recording(recordingUri, fileName, false)
-                recordingArrayList.add(recording)
+                    val dateTxt = readFromFile(dateUri)
+                    val recording = Recording(recordingUri, fileName, false, dateTxt)
+                    recordingArrayList.add(recording)
+                }
 
             }
             filteredArrayList.addAll(recordingArrayList)
@@ -63,8 +86,8 @@ class Manager {
     {
         return (adapter.itemCount != 0)
     }
-    fun addItem(uri: String, fileName: String) {
-        recordingArrayList.add(Recording(uri,fileName,false))
+    fun addItem(uri: String, fileName: String, date: String) {
+        recordingArrayList.add(Recording(uri,fileName,false, date))
         filterRecordings()
         adapter.notifyDataSetChanged()
     }

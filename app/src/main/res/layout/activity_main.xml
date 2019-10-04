@@ -52,18 +52,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@color/colorPrimary" />
 
-    <TextView
-        android:id="@+id/emptyText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Audio list is empty, please use the button below to record"
-        android:visibility="invisible"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/audiofiles" />
-
     <SearchView
         android:id="@+id/searchView"
         android:layout_width="0dp"
@@ -83,19 +71,6 @@
         app:layout_constraintTop_toTopOf="@+id/guideline6"
         app:queryHint="Search audio" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/audiofiles"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:paddingBottom="30dp"
-        android:scrollbars="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="1.0" />
-
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline3"
         android:layout_width="wrap_content"
@@ -111,14 +86,47 @@
         app:layout_constraintGuide_end="72dp" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/mainViewLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/guideline11"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline">
+
+        <TextView
+            android:id="@+id/emptyText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Audio list is empty, please use the button below to record"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.333"
+            app:layout_constraintStart_toStartOf="@+id/audiofiles"
+            app:layout_constraintTop_toTopOf="@+id/audiofiles"
+            app:layout_constraintVertical_bias="0.052" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/audiofiles"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:paddingBottom="30dp"
+            android:scrollbars="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/pausePanel"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="@mipmap/pausebg"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/audiofiles"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/guideline9"
         app:layout_constraintVertical_bias="0.0">
@@ -189,6 +197,17 @@
             app:backgroundTint="@android:color/background_light"
             app:elevation="16dp"
             app:layout_anchor="@+id/bar" />
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Button"
+            app:layout_anchor="@+id/bar"
+            app:layout_constraintBottom_toTopOf="@+id/bar"
+            app:layout_constraintEnd_toStartOf="@+id/bar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
