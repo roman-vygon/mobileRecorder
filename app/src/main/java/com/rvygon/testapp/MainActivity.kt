@@ -2,12 +2,12 @@ package com.rvygon.testapp
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
@@ -16,7 +16,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.IOException
 
 
 import android.graphics.Canvas
@@ -24,15 +23,16 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.SystemClock
-import android.provider.MediaStore
 import android.text.InputType
 import android.view.Menu
+import android.view.MenuItem
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 
 import java.io.File
 import android.widget.Chronometer
 import android.widget.SearchView
+import androidx.appcompat.view.menu.MenuItemImpl
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 
@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        setSupportActionBar(bar)
         managerObj.fetchRecordings()
         initViews()
         audiofiles.requestFocus()
@@ -278,6 +279,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         val inflater = menuInflater
         inflater.inflate(R.menu.bottom_bar_buttons, menu)
+        return true
+    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        val a = item!!.getItemId()
+        if (a == R.id.app_bar_settings)
+        {
+            val intent = Intent(this, SettingsActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
         return true
     }
     private fun prepareRecording()
